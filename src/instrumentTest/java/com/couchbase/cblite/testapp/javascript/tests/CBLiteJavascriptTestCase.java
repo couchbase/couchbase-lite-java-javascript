@@ -4,9 +4,9 @@ import android.test.InstrumentationTestCase;
 import android.util.Base64;
 import android.util.Log;
 
-import com.couchbase.cblite.CBLBody;
+import com.couchbase.cblite.internal.CBLBody;
 import com.couchbase.cblite.CBLDatabase;
-import com.couchbase.cblite.CBLServer;
+import com.couchbase.cblite.internal.CBLServerInternal;
 import com.couchbase.cblite.router.CBLRouter;
 import com.couchbase.cblite.router.CBLURLConnection;
 import com.couchbase.cblite.router.CBLURLStreamHandlerFactory;
@@ -40,7 +40,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
 
     protected ObjectMapper mapper = new ObjectMapper();
 
-    protected CBLServer server = null;
+    protected CBLServerInternal server = null;
     protected CBLDatabase database = null;
     protected String DEFAULT_TEST_DB = "cblite-test";
 
@@ -71,7 +71,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
             File serverPathFile = new File(serverPath);
             FileDirUtils.deleteRecursive(serverPathFile);
             serverPathFile.mkdir();
-            server = new CBLServer(getServerPath());
+            server = new CBLServerInternal(getServerPath());
         } catch (IOException e) {
             fail("Creating server caused IOException");
         }
@@ -98,7 +98,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
     protected CBLDatabase ensureEmptyDatabase(String dbName) {
         CBLDatabase db = server.getExistingDatabaseNamed(dbName);
         if(db != null) {
-            boolean status = db.deleteDatabase();
+            boolean status = db.delete();
             Assert.assertTrue(status);
         }
         db = server.getDatabaseNamed(dbName, true);
@@ -199,7 +199,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         }
     }
 
-    protected CBLURLConnection sendRequest(CBLServer server, String method, String path, Map<String,String> headers, Object bodyObj) {
+    protected CBLURLConnection sendRequest(CBLServerInternal server, String method, String path, Map<String,String> headers, Object bodyObj) {
         try {
             URL url = new URL("cblite://" + path);
             CBLURLConnection conn = (CBLURLConnection)url.openConnection();
@@ -246,7 +246,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         return result;
     }
 
-    protected Object sendBody(CBLServer server, String method, String path, Object bodyObj, int expectedStatus, Object expectedResult) {
+    protected Object sendBody(CBLServerInternal server, String method, String path, Object bodyObj, int expectedStatus, Object expectedResult) {
         CBLURLConnection conn = sendRequest(server, method, path, null, bodyObj);
         Object result = parseJSONResponse(conn);
         Log.v(TAG, String.format("%s %s --> %d", method, path, conn.getResponseCode()));
@@ -257,7 +257,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         return result;
     }
 
-    protected Object send(CBLServer server, String method, String path, int expectedStatus, Object expectedResult) {
+    protected Object send(CBLServerInternal server, String method, String path, int expectedStatus, Object expectedResult) {
         return sendBody(server, method, path, null, expectedStatus, expectedResult);
     }
 

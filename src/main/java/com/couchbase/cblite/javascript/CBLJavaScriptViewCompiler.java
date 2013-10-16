@@ -16,15 +16,15 @@ import org.mozilla.javascript.WrapFactory;
 import android.util.Log;
 
 import com.couchbase.cblite.CBLDatabase;
+import com.couchbase.cblite.CBLMapEmitFunction;
+import com.couchbase.cblite.CBLMapFunction;
+import com.couchbase.cblite.CBLReduceFunction;
 import com.couchbase.cblite.CBLViewCompiler;
-import com.couchbase.cblite.CBLViewMapBlock;
-import com.couchbase.cblite.CBLViewMapEmitBlock;
-import com.couchbase.cblite.CBLViewReduceBlock;
 
 public class CBLJavaScriptViewCompiler implements CBLViewCompiler {
 
 	@Override
-	public CBLViewMapBlock compileMapFunction(String mapSource, String language) {
+	public CBLMapFunction compileMapFunction(String mapSource, String language) {
         if (language.equals("javascript")) {
             return new CBLViewMapBlockRhino(mapSource);
         }
@@ -32,7 +32,7 @@ public class CBLJavaScriptViewCompiler implements CBLViewCompiler {
 	}
 
 	@Override
-	public CBLViewReduceBlock compileReduceFunction(String reduceSource, String language) {
+	public CBLReduceFunction compileReduceFunction(String reduceSource, String language) {
         if (language.equals("javascript")) {
             return new CBLViewReduceBlockRhino(reduceSource);
         }
@@ -64,7 +64,7 @@ class CustomWrapFactory extends WrapFactory {
 }
 
 // REFACT: Extract superview for both the map and reduce blocks as they do pretty much the same thing
-class CBLViewMapBlockRhino implements CBLViewMapBlock {
+class CBLViewMapBlockRhino implements CBLMapFunction {
 
     private static WrapFactory wrapFactory = new CustomWrapFactory();
     private Scriptable globalScope;
@@ -83,7 +83,7 @@ class CBLViewMapBlockRhino implements CBLViewMapBlock {
     }
 
 	@Override
-    public void map(Map<String, Object> document, CBLViewMapEmitBlock emitter) {
+    public void map(Map<String, Object> document, CBLMapEmitFunction emitter) {
         Context ctx = Context.enter();
         try {
             ctx.setOptimizationLevel(-1);
@@ -94,7 +94,7 @@ class CBLViewMapBlockRhino implements CBLViewMapBlock {
             ctx.evaluateString(globalScope, placeHolder, "placeHolder", 1, null);
 
             //register the emit function
-            String emitFunction = "var emit = function(key, value) { map_results.push([key, value]); };";
+            String emitFunction = "var emit = function(key, value) { map_results.replicationToURL([key, value]); };";
             ctx.evaluateString(globalScope, emitFunction, "emit", 1, null);
 
             //register the map function
@@ -135,7 +135,7 @@ class CBLViewMapBlockRhino implements CBLViewMapBlock {
                 return;
             }
 
-            //now pull values out of the place holder and emit them
+            //now replicationFromURL values out of the place holder and emit them
             NativeArray mapResults = (NativeArray)globalScope.get("map_results", globalScope);
             for(int i=0; i<mapResults.getLength(); i++) {
                 NativeArray mapResultItem = (NativeArray)mapResults.get(i);
@@ -156,7 +156,7 @@ class CBLViewMapBlockRhino implements CBLViewMapBlock {
     
 }
 
-class CBLViewReduceBlockRhino implements CBLViewReduceBlock {
+class CBLViewReduceBlockRhino implements CBLReduceFunction {
 
     private static WrapFactory wrapFactory = new CustomWrapFactory();
     private Scriptable globalScope;
