@@ -4,9 +4,9 @@ import android.test.InstrumentationTestCase;
 import android.util.Base64;
 import android.util.Log;
 
-import com.couchbase.cblite.internal.CBLBody;
 import com.couchbase.cblite.CBLDatabase;
-import com.couchbase.cblite.internal.CBLServerInternal;
+import com.couchbase.cblite.CBLManager;
+import com.couchbase.cblite.internal.CBLBody;
 import com.couchbase.cblite.router.CBLRouter;
 import com.couchbase.cblite.router.CBLURLConnection;
 import com.couchbase.cblite.router.CBLURLStreamHandlerFactory;
@@ -40,7 +40,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
 
     protected ObjectMapper mapper = new ObjectMapper();
 
-    protected CBLServerInternal server = null;
+    protected CBLManager manager = null;
     protected CBLDatabase database = null;
     protected String DEFAULT_TEST_DB = "cblite-test";
 
@@ -66,20 +66,16 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
     }
 
     protected void startCBLite() {
-        try {
-            String serverPath = getServerPath();
-            File serverPathFile = new File(serverPath);
-            FileDirUtils.deleteRecursive(serverPathFile);
-            serverPathFile.mkdir();
-            server = new CBLServerInternal(getServerPath());
-        } catch (IOException e) {
-            fail("Creating server caused IOException");
-        }
+        String serverPath = getServerPath();
+        File serverPathFile = new File(serverPath);
+        FileDirUtils.deleteRecursive(serverPathFile);
+        serverPathFile.mkdir();
+        manager = new CBLManager(getInstrumentation().getContext(), "test-javascript");
     }
 
     protected void stopCBLite() {
-        if(server != null) {
-            server.close();
+        if(manager != null) {
+            manager.close();
         }
     }
 
@@ -96,12 +92,12 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
     }
 
     protected CBLDatabase ensureEmptyDatabase(String dbName) {
-        CBLDatabase db = server.getExistingDatabaseNamed(dbName);
+        CBLDatabase db = manager.getExistingDatabase(dbName);
         if(db != null) {
             boolean status = db.delete();
             Assert.assertTrue(status);
         }
-        db = server.getDatabaseNamed(dbName, true);
+        db = manager.getDatabase(dbName);
         return db;
     }
 
@@ -199,7 +195,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         }
     }
 
-    protected CBLURLConnection sendRequest(CBLServerInternal server, String method, String path, Map<String,String> headers, Object bodyObj) {
+    protected CBLURLConnection sendRequest(String method, String path, Map<String, String> headers, Object bodyObj) {
         try {
             URL url = new URL("cblite://" + path);
             CBLURLConnection conn = (CBLURLConnection)url.openConnection();
@@ -217,7 +213,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
                 conn.setRequestInputStream(bais);
             }
 
-            CBLRouter router = new CBLRouter(server, conn);
+            CBLRouter router = new CBLRouter(manager, conn);
             router.start();
             return conn;
         } catch (MalformedURLException e) {
@@ -246,8 +242,8 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         return result;
     }
 
-    protected Object sendBody(CBLServerInternal server, String method, String path, Object bodyObj, int expectedStatus, Object expectedResult) {
-        CBLURLConnection conn = sendRequest(server, method, path, null, bodyObj);
+    protected Object sendBody(String method, String path, Object bodyObj, int expectedStatus, Object expectedResult) {
+        CBLURLConnection conn = sendRequest(method, path, null, bodyObj);
         Object result = parseJSONResponse(conn);
         Log.v(TAG, String.format("%s %s --> %d", method, path, conn.getResponseCode()));
         Assert.assertEquals(expectedStatus, conn.getResponseCode());
@@ -257,8 +253,8 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         return result;
     }
 
-    protected Object send(CBLServerInternal server, String method, String path, int expectedStatus, Object expectedResult) {
-        return sendBody(server, method, path, null, expectedStatus, expectedResult);
+    protected Object send(String method, String path, int expectedStatus, Object expectedResult) {
+        return sendBody(method, path, null, expectedStatus, expectedResult);
     }
 
 }
