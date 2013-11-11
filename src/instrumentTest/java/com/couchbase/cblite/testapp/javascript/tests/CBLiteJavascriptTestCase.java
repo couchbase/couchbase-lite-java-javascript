@@ -1,8 +1,6 @@
 package com.couchbase.cblite.testapp.javascript.tests;
 
 import android.test.InstrumentationTestCase;
-import android.util.Base64;
-import android.util.Log;
 
 import com.couchbase.cblite.CBLBody;
 import com.couchbase.cblite.CBLDatabase;
@@ -10,7 +8,9 @@ import com.couchbase.cblite.CBLServer;
 import com.couchbase.cblite.router.CBLRouter;
 import com.couchbase.cblite.router.CBLURLConnection;
 import com.couchbase.cblite.router.CBLURLStreamHandlerFactory;
+import com.couchbase.cblite.support.Base64;
 import com.couchbase.cblite.support.FileDirUtils;
+import com.couchbase.cblite.util.Log;
 
 import junit.framework.Assert;
 
@@ -185,9 +185,9 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
 
             String userInfo = url.getUserInfo();
             if(userInfo != null) {
-                byte[] authEncBytes = Base64.encode(userInfo.getBytes(), Base64.DEFAULT);
+                String authEnc = Base64.encodeBytes(userInfo.getBytes());
 
-                conn.setRequestProperty("Authorization", "Basic " + new String(authEncBytes));
+                conn.setRequestProperty("Authorization", "Basic " + authEnc);
             }
 
             conn.setRequestMethod("DELETE");

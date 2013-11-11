@@ -13,13 +13,12 @@ import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.WrapFactory;
 
-import android.util.Log;
-
 import com.couchbase.cblite.CBLDatabase;
 import com.couchbase.cblite.CBLViewCompiler;
 import com.couchbase.cblite.CBLViewMapBlock;
 import com.couchbase.cblite.CBLViewMapEmitBlock;
 import com.couchbase.cblite.CBLViewReduceBlock;
+import com.couchbase.cblite.util.Log;
 
 public class CBLJavaScriptViewCompiler implements CBLViewCompiler {
 
