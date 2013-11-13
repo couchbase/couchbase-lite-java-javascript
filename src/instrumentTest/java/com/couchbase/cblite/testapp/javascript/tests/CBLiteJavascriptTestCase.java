@@ -70,7 +70,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         File serverPathFile = new File(serverPath);
         FileDirUtils.deleteRecursive(serverPathFile);
         serverPathFile.mkdir();
-        manager = new CBLManager(getInstrumentation().getContext(), "test-javascript");
+        manager = new CBLManager(new File(getInstrumentation().getContext().getFilesDir(),  "test-javascript"));
     }
 
     protected void stopCBLite() {
