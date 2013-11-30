@@ -1,8 +1,12 @@
 package com.couchbase.cblite.javascript;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import android.util.Log;
+
+import com.couchbase.cblite.CBLDatabase;
+import com.couchbase.cblite.CBLEmitter;
+import com.couchbase.cblite.CBLMapper;
+import com.couchbase.cblite.CBLReducer;
+import com.couchbase.cblite.CBLViewCompiler;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.elasticsearch.script.javascript.support.NativeList;
@@ -13,18 +17,14 @@ import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.WrapFactory;
 
-import android.util.Log;
-
-import com.couchbase.cblite.CBLDatabase;
-import com.couchbase.cblite.CBLMapEmitFunction;
-import com.couchbase.cblite.CBLMapFunction;
-import com.couchbase.cblite.CBLReduceFunction;
-import com.couchbase.cblite.CBLViewCompiler;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 public class CBLJavaScriptViewCompiler implements CBLViewCompiler {
 
 	@Override
-	public CBLMapFunction compileMapFunction(String mapSource, String language) {
+	public CBLMapper compileMap(String mapSource, String language) {
         if (language.equals("javascript")) {
             return new CBLViewMapBlockRhino(mapSource);
         }
@@ -32,7 +32,7 @@ public class CBLJavaScriptViewCompiler implements CBLViewCompiler {
 	}
 
 	@Override
-	public CBLReduceFunction compileReduceFunction(String reduceSource, String language) {
+	public CBLReducer compileReduce(String reduceSource, String language) {
         if (language.equals("javascript")) {
             return new CBLViewReduceBlockRhino(reduceSource);
         }
@@ -64,7 +64,7 @@ class CustomWrapFactory extends WrapFactory {
 }
 
 // REFACT: Extract superview for both the map and reduce blocks as they do pretty much the same thing
-class CBLViewMapBlockRhino implements CBLMapFunction {
+class CBLViewMapBlockRhino implements CBLMapper {
 
     private static WrapFactory wrapFactory = new CustomWrapFactory();
     private Scriptable globalScope;
@@ -83,7 +83,7 @@ class CBLViewMapBlockRhino implements CBLMapFunction {
     }
 
 	@Override
-    public void map(Map<String, Object> document, CBLMapEmitFunction emitter) {
+    public void map(Map<String, Object> document, CBLEmitter emitter) {
         Context ctx = Context.enter();
         try {
             ctx.setOptimizationLevel(-1);
@@ -156,7 +156,7 @@ class CBLViewMapBlockRhino implements CBLMapFunction {
     
 }
 
-class CBLViewReduceBlockRhino implements CBLReduceFunction {
+class CBLViewReduceBlockRhino implements CBLReducer {
 
     private static WrapFactory wrapFactory = new CustomWrapFactory();
     private Scriptable globalScope;
