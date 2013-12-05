@@ -1,16 +1,17 @@
-package com.couchbase.cblite.testapp.javascript.tests;
+package com.couchbase.lite.testapp.javascript.tests;
 
 import android.test.InstrumentationTestCase;
 
-import com.couchbase.cblite.CBLBody;
-import com.couchbase.cblite.CBLDatabase;
-import com.couchbase.cblite.CBLServer;
-import com.couchbase.cblite.router.CBLRouter;
-import com.couchbase.cblite.router.CBLURLConnection;
-import com.couchbase.cblite.router.CBLURLStreamHandlerFactory;
-import com.couchbase.cblite.support.FileDirUtils;
-import com.couchbase.cblite.util.Log;
-import com.couchbase.cblite.util.Base64;
+
+import com.couchbase.lite.Database;
+import com.couchbase.lite.Manager;
+import com.couchbase.lite.internal.Body;
+import com.couchbase.lite.router.Router;
+import com.couchbase.lite.router.URLConnection;
+import com.couchbase.lite.router.URLStreamHandlerFactory;
+import com.couchbase.lite.support.FileDirUtils;
+import com.couchbase.lite.util.Base64;
+import com.couchbase.lite.util.Log;
 
 import junit.framework.Assert;
 
@@ -40,8 +41,8 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
 
     protected ObjectMapper mapper = new ObjectMapper();
 
-    protected CBLServer server = null;
-    protected CBLDatabase database = null;
+    protected Manager manager = null;
+    protected Database database = null;
     protected String DEFAULT_TEST_DB = "cblite-test";
 
     @Override
@@ -51,7 +52,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
 
         //for some reason a traditional static initializer causes junit to die
         if(!initializedUrlHandler) {
-            CBLURLStreamHandlerFactory.registerSelfIgnoreError();
+            URLStreamHandlerFactory.registerSelfIgnoreError();
             initializedUrlHandler = true;
         }
 
@@ -66,20 +67,16 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
     }
 
     protected void startCBLite() {
-        try {
-            String serverPath = getServerPath();
-            File serverPathFile = new File(serverPath);
-            FileDirUtils.deleteRecursive(serverPathFile);
-            serverPathFile.mkdir();
-            server = new CBLServer(getServerPath());
-        } catch (IOException e) {
-            fail("Creating server caused IOException");
-        }
+        String serverPath = getServerPath();
+        File serverPathFile = new File(serverPath);
+        FileDirUtils.deleteRecursive(serverPathFile);
+        serverPathFile.mkdir();
+        manager = new Manager(getInstrumentation().getContext().getFilesDir(), Manager.DEFAULT_OPTIONS);
     }
 
     protected void stopCBLite() {
-        if(server != null) {
-            server.close();
+        if(manager != null) {
+            manager.close();
         }
     }
 
@@ -95,13 +92,13 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         }
     }
 
-    protected CBLDatabase ensureEmptyDatabase(String dbName) {
-        CBLDatabase db = server.getExistingDatabaseNamed(dbName);
+    protected Database ensureEmptyDatabase(String dbName) {
+        Database db = manager.getExistingDatabase(dbName);
         if(db != null) {
-            boolean status = db.deleteDatabase();
+            boolean status = db.delete();
             Assert.assertTrue(status);
         }
-        db = server.getDatabaseNamed(dbName, true);
+        db = manager.getDatabase(dbName);
         return db;
     }
 
@@ -199,10 +196,10 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         }
     }
 
-    protected CBLURLConnection sendRequest(CBLServer server, String method, String path, Map<String,String> headers, Object bodyObj) {
+    protected URLConnection sendRequest(String method, String path, Map<String, String> headers, Object bodyObj) {
         try {
             URL url = new URL("cblite://" + path);
-            CBLURLConnection conn = (CBLURLConnection)url.openConnection();
+            URLConnection conn = (URLConnection)url.openConnection();
             conn.setDoOutput(true);
             conn.setRequestMethod(method);
             if(headers != null) {
@@ -217,7 +214,7 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
                 conn.setRequestInputStream(bais);
             }
 
-            CBLRouter router = new CBLRouter(server, conn);
+            Router router = new Router(manager, conn);
             router.start();
             return conn;
         } catch (MalformedURLException e) {
@@ -228,9 +225,9 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         return null;
     }
 
-    protected Object parseJSONResponse(CBLURLConnection conn) {
+    protected Object parseJSONResponse(URLConnection conn) {
         Object result = null;
-        CBLBody responseBody = conn.getResponseBody();
+        Body responseBody = conn.getResponseBody();
         if(responseBody != null) {
             byte[] json = responseBody.getJson();
             String jsonString = null;
@@ -246,8 +243,8 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         return result;
     }
 
-    protected Object sendBody(CBLServer server, String method, String path, Object bodyObj, int expectedStatus, Object expectedResult) {
-        CBLURLConnection conn = sendRequest(server, method, path, null, bodyObj);
+    protected Object sendBody(String method, String path, Object bodyObj, int expectedStatus, Object expectedResult) {
+        URLConnection conn = sendRequest(method, path, null, bodyObj);
         Object result = parseJSONResponse(conn);
         Log.v(TAG, String.format("%s %s --> %d", method, path, conn.getResponseCode()));
         Assert.assertEquals(expectedStatus, conn.getResponseCode());
@@ -257,8 +254,8 @@ public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
         return result;
     }
 
-    protected Object send(CBLServer server, String method, String path, int expectedStatus, Object expectedResult) {
-        return sendBody(server, method, path, null, expectedStatus, expectedResult);
+    protected Object send(String method, String path, int expectedStatus, Object expectedResult) {
+        return sendBody(method, path, null, expectedStatus, expectedResult);
     }
 
 }
