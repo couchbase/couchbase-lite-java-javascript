@@ -1,12 +1,6 @@
-package com.couchbase.cblite.javascript;
+package com.couchbase.lite.javascript;
 
 import android.util.Log;
-
-import com.couchbase.cblite.CBLDatabase;
-import com.couchbase.cblite.CBLEmitter;
-import com.couchbase.cblite.CBLMapper;
-import com.couchbase.cblite.CBLReducer;
-import com.couchbase.cblite.CBLViewCompiler;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.elasticsearch.script.javascript.support.NativeList;
@@ -22,20 +16,26 @@ import java.util.List;
 import java.util.Map;
 
 
-public class CBLJavaScriptViewCompiler implements CBLViewCompiler {
+import com.couchbase.lite.Database;
+import com.couchbase.lite.Emitter;
+import com.couchbase.lite.Mapper;
+import com.couchbase.lite.Reducer;
+import com.couchbase.lite.ViewCompiler;
+
+public class JavaScriptViewCompiler implements ViewCompiler {
 
 	@Override
-	public CBLMapper compileMap(String mapSource, String language) {
+	public Mapper compileMap(String mapSource, String language) {
         if (language.equals("javascript")) {
-            return new CBLViewMapBlockRhino(mapSource);
+            return new ViewMapBlockRhino(mapSource);
         }
         throw new IllegalArgumentException(language + " is not supported");
 	}
 
 	@Override
-	public CBLReducer compileReduce(String reduceSource, String language) {
+	public Reducer compileReduce(String reduceSource, String language) {
         if (language.equals("javascript")) {
-            return new CBLViewReduceBlockRhino(reduceSource);
+            return new ViewReduceBlockRhino(reduceSource);
         }
         throw new IllegalArgumentException(language + " is not supported");
 	}
@@ -65,13 +65,14 @@ class CustomWrapFactory extends WrapFactory {
 }
 
 // REFACT: Extract superview for both the map and reduce blocks as they do pretty much the same thing
-class CBLViewMapBlockRhino implements CBLMapper {
+
+class ViewMapBlockRhino implements Mapper {
 
     private static WrapFactory wrapFactory = new CustomWrapFactory();
     private Scriptable globalScope;
     private String src;
 
-    public CBLViewMapBlockRhino(String src) {
+    public ViewMapBlockRhino(String src) {
         this.src = src;
         Context ctx = Context.enter();
         try {
@@ -84,7 +85,7 @@ class CBLViewMapBlockRhino implements CBLMapper {
     }
 
 	@Override
-    public void map(Map<String, Object> document, CBLEmitter emitter) {
+    public void map(Map<String, Object> document, Emitter emitter) {
         Context ctx = Context.enter();
         try {
             ctx.setOptimizationLevel(-1);
@@ -106,7 +107,7 @@ class CBLViewMapBlockRhino implements CBLMapper {
             	// Error in the JavaScript view - CouchDB swallows  the error and tries the next document
             	// REFACT: would be nice to check this in the constructor so we don't have to reparse every time
             	// should also be much faster if we can insert the map function into this objects globals
-                Log.e(CBLDatabase.TAG, "Javascript syntax error in view:\n" + src, e);
+                Log.e(Database.TAG, "Javascript syntax error in view:\n" + src, e);
                 return;
             }
             
@@ -122,7 +123,7 @@ class CBLViewMapBlockRhino implements CBLMapper {
 			} catch (IOException e) {
 				// Can thrown different subclasses of IOException- but we really do not care,
 				// as this document was unserialized from JSON, so Jackson should be able to serialize it. 
-				Log.e(CBLDatabase.TAG, "Error reserializing json from the db: " + document, e);
+				Log.e(Database.TAG, "Error reserializing json from the db: " + document, e);
 				return;
 			}
             
@@ -132,7 +133,7 @@ class CBLViewMapBlockRhino implements CBLMapper {
             }
             catch (org.mozilla.javascript.RhinoException e) {
             	// Error in the JavaScript view - CouchDB swallows  the error and tries the next document
-                Log.e(CBLDatabase.TAG, "Error in javascript view:\n" + src + "\n with document:\n" + document, e);
+                Log.e(Database.TAG, "Error in javascript view:\n" + src + "\n with document:\n" + document, e);
                 return;
             }
 
@@ -145,7 +146,7 @@ class CBLViewMapBlockRhino implements CBLMapper {
                     Object value = mapResultItem.get(1);
                     emitter.emit(key, value);
                 } else {
-                    Log.e(CBLDatabase.TAG, "Expected 2 element array with key and value");
+                    Log.e(Database.TAG, "Expected 2 element array with key and value");
                 }
 
             }
@@ -157,13 +158,13 @@ class CBLViewMapBlockRhino implements CBLMapper {
     
 }
 
-class CBLViewReduceBlockRhino implements CBLReducer {
+class ViewReduceBlockRhino implements Reducer {
 
     private static WrapFactory wrapFactory = new CustomWrapFactory();
     private Scriptable globalScope;
     private String src;
 
-    public CBLViewReduceBlockRhino(String src) {
+    public ViewReduceBlockRhino(String src) {
         this.src = src;
         Context ctx = Context.enter();
         try {

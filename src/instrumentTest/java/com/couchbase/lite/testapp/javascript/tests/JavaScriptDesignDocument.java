@@ -1,8 +1,8 @@
-package com.couchbase.cblite.testapp.javascript.tests;
+package com.couchbase.lite.testapp.javascript.tests;
 
-import com.couchbase.cblite.CBLStatus;
-import com.couchbase.cblite.CBLView;
-import com.couchbase.cblite.javascript.CBLJavaScriptViewCompiler;
+import com.couchbase.lite.Status;
+import com.couchbase.lite.View;
+import com.couchbase.lite.javascript.JavaScriptViewCompiler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +32,7 @@ public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
     
 	// REFACT: consider pulling up into CBLiteTestCase
 	List<Object> getView(String fullViewPath) throws Exception {
-        Map<String, Object> result = (Map<String, Object>) send("GET", fullViewPath, CBLStatus.OK, null);
+        Map<String, Object> result = (Map<String, Object>) send("GET", fullViewPath, Status.OK, null);
         assertEquals(0, result.get("offset"));
         return (List<Object>) result.get("rows");
 	}
@@ -50,24 +50,24 @@ public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
     	super.setUp();
 
         // Register the JavaScript view compiler
-        CBLView.setCompiler(new CBLJavaScriptViewCompiler());
+        View.setCompiler(new JavaScriptViewCompiler());
         
-        send("PUT", "/rhinodb", CBLStatus.CREATED, null);
+        send("PUT", "/rhinodb", Status.CREATED, null);
 	}
 	
 	public void testJavaScriptDesignDocument() {
         // PUT:
         Map<String,Object> doc1 = new HashMap<String,Object>();
         doc1.put("message", "hello");
-        Map<String,Object> result = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc1", doc1, CBLStatus.CREATED, null);
+        Map<String,Object> result = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc1", doc1, Status.CREATED, null);
 
         Map<String,Object> doc2 = new HashMap<String,Object>();
         doc2.put("message", "guten tag");
-        Map<String,Object> result2 = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc2", doc2, CBLStatus.CREATED, null);
+        Map<String,Object> result2 = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc2", doc2, Status.CREATED, null);
 
         Map<String,Object> doc3 = new HashMap<String,Object>();
         doc3.put("message", "bonjour");
-        Map<String,Object> result3 = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc3", doc3, CBLStatus.CREATED, null);
+        Map<String,Object> result3 = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc3", doc3, Status.CREATED, null);
 
 
         Map<String,Object> ddocViewTest = new HashMap<String,Object>();
@@ -78,7 +78,7 @@ public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
 
         Map<String,Object> ddoc = new HashMap<String,Object>();
         ddoc.put("views", ddocViews);
-        Map<String,Object> ddocresult = (Map<String,Object>)sendBody("PUT", "/rhinodb/_design/doc", ddoc, CBLStatus.CREATED, null);
+        Map<String,Object> ddocresult = (Map<String,Object>)sendBody("PUT", "/rhinodb/_design/doc", ddoc, Status.CREATED, null);
 
         // Build up our expected result
 
@@ -106,7 +106,7 @@ public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
         expectedResult.put("rows", expectedRows);
 
         // Query the view and check the result:
-        send("GET", "/rhinodb/_design/doc/_view/test", CBLStatus.OK, expectedResult);
+        send("GET", "/rhinodb/_design/doc/_view/test", Status.OK, expectedResult);
 
     }
 
@@ -117,21 +117,21 @@ public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
         cat1.add("apple");
         cat1.add("bannana");
         doc1.put("categories", cat1);
-        Map<String,Object> result = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc1", doc1, CBLStatus.CREATED, null);
+        Map<String,Object> result = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc1", doc1, Status.CREATED, null);
 
         Map<String,Object> doc2 = new HashMap<String,Object>();
         List<String> cat2 = new ArrayList();
         cat2.add("clock");
         cat2.add("dill");
         doc2.put("categories", cat2);
-        Map<String,Object> result2 = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc2", doc2, CBLStatus.CREATED, null);
+        Map<String,Object> result2 = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc2", doc2, Status.CREATED, null);
 
         Map<String,Object> doc3 = new HashMap<String,Object>();
         List<String> cat3 = new ArrayList();
         cat3.add("elephant");
         cat3.add("fun");
         doc3.put("categories", cat3);
-        Map<String,Object> result3 = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc3", doc3, CBLStatus.CREATED, null);
+        Map<String,Object> result3 = (Map<String,Object>)sendBody("PUT", "/rhinodb/doc3", doc3, Status.CREATED, null);
 
 
         Map<String,Object> ddocViewTest = new HashMap<String,Object>();
@@ -142,7 +142,7 @@ public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
 
         Map<String,Object> ddoc = new HashMap<String,Object>();
         ddoc.put("views", ddocViews);
-        Map<String,Object> ddocresult = (Map<String,Object>)sendBody("PUT", "/rhinodb/_design/doc", ddoc, CBLStatus.CREATED, null);
+        Map<String,Object> ddocresult = (Map<String,Object>)sendBody("PUT", "/rhinodb/_design/doc", ddoc, Status.CREATED, null);
 
         // Build up our expected result
 
@@ -191,7 +191,7 @@ public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
         expectedResult.put("rows", expectedRows);
 
         // Query the view and check the result:
-        Object res = send("GET", "/rhinodb/_design/doc/_view/test", CBLStatus.OK, expectedResult);
+        Object res = send("GET", "/rhinodb/_design/doc/_view/test", Status.OK, expectedResult);
     }
     
     public void testJavaScriptDesignDocumentThatDealsWithArrays() throws Exception {
@@ -200,10 +200,10 @@ public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
 			   "\"producers\": [ \"\" ]," +
 			   "\"collection\": \"product\"" +
 			"}");
-        sendBody("PUT", "/rhinodb/doc1", json, CBLStatus.CREATED, null);
+        sendBody("PUT", "/rhinodb/doc1", json, Status.CREATED, null);
         
         Object ddoc = ddocWithMap("test", "function(doc) { if ('product' === doc.collection && doc.producers) { doc.producers.forEach(function(each) { emit(each, doc); }); } }");
-        sendBody("PUT", "/rhinodb/_design/doc", ddoc, CBLStatus.CREATED, null);
+        sendBody("PUT", "/rhinodb/_design/doc", ddoc, Status.CREATED, null);
         
         List<Object> rows = getView("/rhinodb/_design/doc/_view/test", 1);
         Map<String,Object> resultRow = (Map) rows.get(0);
@@ -214,10 +214,10 @@ public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
     }
 	
 	public void testShouldLeaveOutDocumentsWhenMapBlockThrowsAnException() throws Exception {
-		sendBody("PUT", "/rhinodb/good", json("{}"), CBLStatus.CREATED, null);
-		sendBody("PUT", "/rhinodb/bad", json("{}"), CBLStatus.CREATED, null);
+		sendBody("PUT", "/rhinodb/good", json("{}"), Status.CREATED, null);
+		sendBody("PUT", "/rhinodb/bad", json("{}"), Status.CREATED, null);
 		Object ddoc = ddocWithMap("test", "function(doc) { emit(1, doc); if (doc._id === 'bad') throw new Error('gotcha!'); }");
-        sendBody("PUT", "/rhinodb/_design/doc", ddoc, CBLStatus.CREATED, null);
+        sendBody("PUT", "/rhinodb/_design/doc", ddoc, Status.CREATED, null);
         
         List<Object> rows = getView("/rhinodb/_design/doc/_view/test", 1);
         
@@ -227,18 +227,18 @@ public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
     }
 	
 	public void testShouldReturnEmptyViewIfJavaScriptIsErranous() throws Exception {
-		sendBody("PUT", "/rhinodb/good", json("{}"), CBLStatus.CREATED, null);
+		sendBody("PUT", "/rhinodb/good", json("{}"), Status.CREATED, null);
 		Object ddoc = ddocWithMap("test", "function(doc) { } }"); // syntax error
-        sendBody("PUT", "/rhinodb/_design/doc", ddoc, CBLStatus.CREATED, null);
+        sendBody("PUT", "/rhinodb/_design/doc", ddoc, Status.CREATED, null);
         
         getView("/rhinodb/_design/doc/_view/test", 0);
 	}
 	
 	public void testShouldDiscardDocumentsIfViewThrowsEcmaError() throws Exception {
-		sendBody("PUT", "/rhinodb/good", json("{}"), CBLStatus.CREATED, null);
-		sendBody("PUT", "/rhinodb/bad", json("{}"), CBLStatus.CREATED, null);
+		sendBody("PUT", "/rhinodb/good", json("{}"), Status.CREATED, null);
+		sendBody("PUT", "/rhinodb/bad", json("{}"), Status.CREATED, null);
 		Object ddoc = ddocWithMap("test", "function(doc) { emit(1, null); if (doc._id === 'bad') doc.missingKey.forEach(function(){}); }");
-        sendBody("PUT", "/rhinodb/_design/doc", ddoc, CBLStatus.CREATED, null);
+        sendBody("PUT", "/rhinodb/_design/doc", ddoc, Status.CREATED, null);
         
         List<Object> rows = getView("/rhinodb/_design/doc/_view/test", 1);
         
