@@ -33,7 +33,7 @@ import java.util.Properties;
 // code shared between the tests.  Hopefully most of this code can be refactored into the
 // CBLibrary itself in order to reduce code duplication.
 
-public abstract class CBLiteJavascriptTestCase extends InstrumentationTestCase {
+public abstract class LiteJavascriptTestCase extends InstrumentationTestCase {
 
     public static final String TAG = "CBLiteEktorpTestCase";
 

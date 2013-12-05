@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings({ "unused", "unchecked", "rawtypes" })
-public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
+public class JavaScriptDesignDocument extends LiteJavascriptTestCase {
 
 	// Helpers ........................................................................
 
-    // REFACT: consider to move this up into CBLiteTestCase
+    // REFACT: consider to move this up into LiteTestCase
     public Object json(String jsonString) throws Exception {
     	return mapper.readValue(jsonString, Object.class);
     }
@@ -30,7 +30,7 @@ public class JavaScriptDesignDocument extends CBLiteJavascriptTestCase {
         	"}");
     }
     
-	// REFACT: consider pulling up into CBLiteTestCase
+	// REFACT: consider pulling up into LiteTestCase
 	List<Object> getView(String fullViewPath) throws Exception {
         Map<String, Object> result = (Map<String, Object>) send("GET", fullViewPath, Status.OK, null);
         assertEquals(0, result.get("offset"));
