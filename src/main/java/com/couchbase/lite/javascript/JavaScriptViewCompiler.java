@@ -1,7 +1,5 @@
 package com.couchbase.lite.javascript;
 
-import android.util.Log;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.elasticsearch.script.javascript.support.NativeList;
 import org.elasticsearch.script.javascript.support.NativeMap;
@@ -20,6 +18,7 @@ import com.couchbase.lite.Emitter;
 import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Reducer;
 import com.couchbase.lite.ViewCompiler;
+import com.couchbase.lite.util.Log;
 
 public class JavaScriptViewCompiler implements ViewCompiler {
 
