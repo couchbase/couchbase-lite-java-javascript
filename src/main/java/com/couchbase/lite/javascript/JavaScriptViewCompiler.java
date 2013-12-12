@@ -94,7 +94,7 @@ class ViewMapBlockRhino implements Mapper {
             ctx.evaluateString(globalScope, placeHolder, "placeHolder", 1, null);
 
             //register the emit function
-            String emitFunction = "var emit = function(key, value) { map_results.replicationToURL([key, value]); };";
+            String emitFunction = "var emit = function(key, value) { map_results.push([key, value]); };";
             ctx.evaluateString(globalScope, emitFunction, "emit", 1, null);
 
             //register the map function
@@ -135,7 +135,7 @@ class ViewMapBlockRhino implements Mapper {
                 return;
             }
 
-            //now replicationFromURL values out of the place holder and emit them
+            //now pull values out of the place holder and emit them
             NativeArray mapResults = (NativeArray)globalScope.get("map_results", globalScope);
             for(int i=0; i<mapResults.getLength(); i++) {
                 NativeArray mapResultItem = (NativeArray)mapResults.get(i);
