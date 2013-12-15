@@ -66,7 +66,7 @@ public abstract class LiteJavascriptTestCase extends InstrumentationTestCase {
         return filesDir;
     }
 
-    protected void startCBLite() {
+    protected void startCBLite() throws IOException {
         String serverPath = getServerPath();
         File serverPathFile = new File(serverPath);
         FileDirUtils.deleteRecursive(serverPathFile);
