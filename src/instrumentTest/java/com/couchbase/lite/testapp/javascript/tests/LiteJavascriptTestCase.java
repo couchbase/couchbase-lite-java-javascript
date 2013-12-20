@@ -58,13 +58,6 @@ public abstract class LiteJavascriptTestCase extends TestCase {
         startDatabase();
     }
 
-    // TODO: Portable Java Test [Begin] -----
-
-    protected void runTestOnUiThread(Runnable runnable) {
-        // TODO: What should we do?
-        runnable.run();
-    }
-
     protected InputStream getAsset(String name) {
         return this.getClass().getResourceAsStream("/assets/" + name);
     }
@@ -76,8 +69,6 @@ public abstract class LiteJavascriptTestCase extends TestCase {
 
         return rootDirectory;
     }
-
-    // TODO: Portable Java Test [End] -----
 
     protected String getServerPath() {
         String filesDir = getRootDirectory().getAbsolutePath();
