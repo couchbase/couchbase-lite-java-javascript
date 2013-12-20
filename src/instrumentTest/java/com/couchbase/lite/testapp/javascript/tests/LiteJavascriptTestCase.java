@@ -1,8 +1,5 @@
 package com.couchbase.lite.testapp.javascript.tests;
 
-import android.test.InstrumentationTestCase;
-
-
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Manager;
 import com.couchbase.lite.internal.Body;
@@ -10,18 +7,18 @@ import com.couchbase.lite.router.Router;
 import com.couchbase.lite.router.URLConnection;
 import com.couchbase.lite.router.URLStreamHandlerFactory;
 import com.couchbase.lite.support.FileDirUtils;
-import com.couchbase.lite.util.Base64;
 import com.couchbase.lite.util.Log;
 
 import junit.framework.Assert;
+import junit.framework.TestCase;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -33,9 +30,9 @@ import java.util.Properties;
 // code shared between the tests.  Hopefully most of this code can be refactored into the
 // CBLibrary itself in order to reduce code duplication.
 
-public abstract class LiteJavascriptTestCase extends InstrumentationTestCase {
+public abstract class LiteJavascriptTestCase extends TestCase {
 
-    public static final String TAG = "CBLiteEktorpTestCase";
+    public static final String TAG = "LiteTestCase";
 
     private static boolean initializedUrlHandler = false;
 
@@ -61,8 +58,20 @@ public abstract class LiteJavascriptTestCase extends InstrumentationTestCase {
         startDatabase();
     }
 
+    protected InputStream getAsset(String name) {
+        return this.getClass().getResourceAsStream("/assets/" + name);
+    }
+
+    protected File getRootDirectory() {
+        String rootDirectoryPath = System.getProperty("user.dir");
+        File rootDirectory = new File(rootDirectoryPath);
+        rootDirectory = new File(rootDirectory, "data/data/com.couchbase.cblite.test/files");
+
+        return rootDirectory;
+    }
+
     protected String getServerPath() {
-        String filesDir = getInstrumentation().getContext().getFilesDir().getAbsolutePath();
+        String filesDir = getRootDirectory().getAbsolutePath();
         return filesDir;
     }
 
@@ -71,7 +80,7 @@ public abstract class LiteJavascriptTestCase extends InstrumentationTestCase {
         File serverPathFile = new File(serverPath);
         FileDirUtils.deleteRecursive(serverPathFile);
         serverPathFile.mkdir();
-        manager = new Manager(getInstrumentation().getContext().getFilesDir(), Manager.DEFAULT_OPTIONS);
+        manager = new Manager(new File(getRootDirectory(), "test"), Manager.DEFAULT_OPTIONS);
     }
 
     protected void stopCBLite() {
@@ -80,10 +89,11 @@ public abstract class LiteJavascriptTestCase extends InstrumentationTestCase {
         }
     }
 
-    protected void startDatabase() {
+    protected Database startDatabase() {
         database = ensureEmptyDatabase(DEFAULT_TEST_DB);
         boolean status = database.open();
         Assert.assertTrue(status);
+        return database;
     }
 
     protected void stopDatabse() {
@@ -105,12 +115,12 @@ public abstract class LiteJavascriptTestCase extends InstrumentationTestCase {
     protected void loadCustomProperties() throws IOException {
 
         Properties systemProperties = System.getProperties();
-        InputStream mainProperties = getInstrumentation().getContext().getAssets().open("test.properties");
+        InputStream mainProperties = getAsset("test.properties");
         if(mainProperties != null) {
             systemProperties.load(mainProperties);
         }
         try {
-            InputStream localProperties = getInstrumentation().getContext().getAssets().open("local-test.properties");
+            InputStream localProperties = getAsset("local-test.properties");
             if(localProperties != null) {
                 systemProperties.load(localProperties);
             }
@@ -143,11 +153,15 @@ public abstract class LiteJavascriptTestCase extends InstrumentationTestCase {
         return System.getProperty("replicationDatabase");
     }
 
-    protected URL getReplicationURL() throws MalformedURLException {
-        if(getReplicationAdminUser() != null && getReplicationAdminUser().trim().length() > 0) {
-            return new URL(String.format("%s://%s:%s@%s:%d/%s", getReplicationProtocol(), getReplicationAdminUser(), getReplicationAdminPassword(), getReplicationServer(), getReplicationPort(), getReplicationDatabase()));
-        } else {
-            return new URL(String.format("%s://%s:%d/%s", getReplicationProtocol(), getReplicationServer(), getReplicationPort(), getReplicationDatabase()));
+    protected URL getReplicationURL()  {
+        try {
+            if(getReplicationAdminUser() != null && getReplicationAdminUser().trim().length() > 0) {
+                return new URL(String.format("%s://%s:%s@%s:%d/%s", getReplicationProtocol(), getReplicationAdminUser(), getReplicationAdminPassword(), getReplicationServer(), getReplicationPort(), getReplicationDatabase()));
+            } else {
+                return new URL(String.format("%s://%s:%d/%s", getReplicationProtocol(), getReplicationServer(), getReplicationPort(), getReplicationDatabase()));
+            }
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 
@@ -175,26 +189,47 @@ public abstract class LiteJavascriptTestCase extends InstrumentationTestCase {
         return result;
     }
 
-    protected  void deleteRemoteDB(URL url) {
-        try {
-            Log.v(TAG, String.format("Deleting %s", url.toExternalForm()));
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    public Map<String, Object> getReplicationAuthParsedJson() throws IOException {
+        String authJson = "{\n" +
+                "    \"facebook\" : {\n" +
+                "        \"email\" : \"jchris@couchbase.com\"\n" +
+                "     }\n" +
+                "   }\n";
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String,Object> authProperties  = mapper.readValue(authJson,
+                new TypeReference<HashMap<String,Object>>(){});
+        return authProperties;
 
-            String userInfo = url.getUserInfo();
-            if(userInfo != null) {
-                byte[] authEncBytes = Base64.encode(userInfo.getBytes(), Base64.DEFAULT);
-
-                conn.setRequestProperty("Authorization", "Basic " + new String(authEncBytes));
-            }
-
-            conn.setRequestMethod("DELETE");
-            conn.connect();
-            int responseCode = conn.getResponseCode();
-            Assert.assertTrue(responseCode < 300 || responseCode == 404);
-        } catch (Exception e) {
-            Log.e(TAG, "Exceptiong deleting remote db", e);
-        }
     }
+
+    public Map<String, Object> getPushReplicationParsedJson() throws IOException {
+
+        Map<String,Object> authProperties = getReplicationAuthParsedJson();
+
+        Map<String,Object> targetProperties = new HashMap<String,Object>();
+        targetProperties.put("url", getReplicationURL().toExternalForm());
+        targetProperties.put("auth", authProperties);
+
+        Map<String,Object> properties = new HashMap<String,Object>();
+        properties.put("source", DEFAULT_TEST_DB);
+        properties.put("target", targetProperties);
+        return properties;
+    }
+
+    public Map<String, Object> getPullReplicationParsedJson() throws IOException {
+
+        Map<String,Object> authProperties = getReplicationAuthParsedJson();
+
+        Map<String,Object> sourceProperties = new HashMap<String,Object>();
+        sourceProperties.put("url", getReplicationURL().toExternalForm());
+        sourceProperties.put("auth", authProperties);
+
+        Map<String,Object> properties = new HashMap<String,Object>();
+        properties.put("source", sourceProperties);
+        properties.put("target", DEFAULT_TEST_DB);
+        return properties;
+    }
+
 
     protected URLConnection sendRequest(String method, String path, Map<String, String> headers, Object bodyObj) {
         try {
@@ -214,7 +249,7 @@ public abstract class LiteJavascriptTestCase extends InstrumentationTestCase {
                 conn.setRequestInputStream(bais);
             }
 
-            Router router = new Router(manager, conn);
+            Router router = new com.couchbase.lite.router.Router(manager, conn);
             router.start();
             return conn;
         } catch (MalformedURLException e) {
