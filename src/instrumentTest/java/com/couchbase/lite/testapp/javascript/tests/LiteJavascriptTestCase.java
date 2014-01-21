@@ -105,8 +105,7 @@ public abstract class LiteJavascriptTestCase extends TestCase {
     protected Database ensureEmptyDatabase(String dbName) {
         Database db = manager.getExistingDatabase(dbName);
         if(db != null) {
-            boolean status = db.delete();
-            Assert.assertTrue(status);
+            db.delete();
         }
         db = manager.getDatabase(dbName);
         return db;
