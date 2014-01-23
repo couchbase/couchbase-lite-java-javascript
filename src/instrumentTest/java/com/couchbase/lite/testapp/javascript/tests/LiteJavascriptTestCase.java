@@ -1,5 +1,6 @@
 package com.couchbase.lite.testapp.javascript.tests;
 
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Manager;
 import com.couchbase.lite.internal.Body;
@@ -89,7 +90,7 @@ public abstract class LiteJavascriptTestCase extends TestCase {
         }
     }
 
-    protected Database startDatabase() {
+    protected Database startDatabase() throws CouchbaseLiteException {
         database = ensureEmptyDatabase(DEFAULT_TEST_DB);
         boolean status = database.open();
         Assert.assertTrue(status);
@@ -102,7 +103,7 @@ public abstract class LiteJavascriptTestCase extends TestCase {
         }
     }
 
-    protected Database ensureEmptyDatabase(String dbName) {
+    protected Database ensureEmptyDatabase(String dbName) throws CouchbaseLiteException {
         Database db = manager.getExistingDatabase(dbName);
         if(db != null) {
             db.delete();
