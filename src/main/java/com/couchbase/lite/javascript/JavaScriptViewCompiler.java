@@ -23,17 +23,17 @@ import com.couchbase.lite.util.Log;
 public class JavaScriptViewCompiler implements ViewCompiler {
 
 	@Override
-	public Mapper compileMap(String mapSource, String language) {
+	public Mapper compileMap(String source, String language) {
         if (language.equals("javascript")) {
-            return new ViewMapBlockRhino(mapSource);
+            return new ViewMapBlockRhino(source);
         }
         throw new IllegalArgumentException(language + " is not supported");
 	}
 
 	@Override
-	public Reducer compileReduce(String reduceSource, String language) {
+	public Reducer compileReduce(String source, String language) {
         if (language.equals("javascript")) {
-            return new ViewReduceBlockRhino(reduceSource);
+            return new ViewReduceBlockRhino(source);
         }
         throw new IllegalArgumentException(language + " is not supported");
 	}
