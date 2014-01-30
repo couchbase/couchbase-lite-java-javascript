@@ -28,6 +28,10 @@ android {
         minSdkVersion 9
         targetSdkVersion 19
     }
+
+    lintOptions {
+        abortOnError false
+    }
 }
 
 task createMavenDirectory(type: Exec) {
