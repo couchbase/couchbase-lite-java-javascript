@@ -1,2 +1,13 @@
 /build/
 *.iml
+/.DS_Store
+local.properties
+\#*
+*~
+.#*
+\#*\#
+*.class
+.idea
+.gradle
+
+
