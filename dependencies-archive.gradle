@@ -8,7 +8,7 @@ dependencies {
     // used: Error: duplicate files during packaging of APK.  I guess it is
     // being implicitly included by being in the libs folder, and then "double included"
     // because of a "compile" directive to explicitly include the jar.
-    instrumentTestCompile fileTree(dir: 'libs', include: 'td_collator_so.jar')
+    testCompile fileTree(dir: 'libs', include: 'td_collator_so.jar')
 
     compile 'org.mozilla:rhino:1.7R3'
 }
