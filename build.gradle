@@ -24,7 +24,7 @@ task createMavenDirectory(type: Exec) {
 
     ext {
         uploadUser = System.getenv("UPLOAD_USERNAME") + ":" + System.getenv("UPLOAD_PASSWORD")
-        mkcolPath = System.getenv("UPLOAD_MAVEN_REPO_URL") + "com/couchbase/cblite/CBLiteJavascript/" + System.getenv("UPLOAD_VERSION_CBLITE_JAVASCRIPT") + "/"
+        mkcolPath = System.getenv("UPLOAD_MAVEN_REPO_URL") + "com/couchbase/lite/java-javascript/" + System.getenv("UPLOAD_VERSION_CBLITE_JAVASCRIPT") + "/"
     }
     commandLine "curl", "--user", uploadUser, "-X", "MKCOL", mkcolPath
 }
@@ -43,8 +43,8 @@ uploadArchives {
                 authentication(userName: System.getenv("UPLOAD_USERNAME"), password: System.getenv("UPLOAD_PASSWORD"))
             }
             pom.version = System.getenv("UPLOAD_VERSION_CBLITE_JAVASCRIPT")  // eg, 0.7.2
-            pom.groupId = 'com.couchbase.cblite'
-            pom.artifactId = 'CBLiteJavascript'
+            pom.groupId = 'com.couchbase.lite'
+            pom.artifactId = 'java-javascript'
             pom.project {
                 licenses {
                     license {

@@ -1,10 +1,8 @@
 dependencies {
 
+    testCompile group: 'junit', name: 'junit', version: '4.11'
 
-    // the cblite core library dependency is included as a maven archive because when declaring
-    // as a "compile project" dependency any projects that include this library will get errors.
-    // documented here: https://groups.google.com/forum/?fromgroups#!topic/adt-dev/H2Jk2rVs6G8
-    compile 'com.couchbase.cblite:CBLite:' + System.getenv("UPLOAD_VERSION_CBLITE")
+    compile 'com.couchbase.lite:java-core:' + System.getenv("UPLOAD_VERSION_CBLITE")
 
     // as discovered by trial and error, the build will fail if "compile" is
     // used: Error: duplicate files during packaging of APK.  I guess it is
