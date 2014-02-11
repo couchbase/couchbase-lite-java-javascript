@@ -1,4 +1,3 @@
-
 This allows you to use Javascript in map/reduce views, as opposed to native Java code (the default behavior for Couchbase-Lite).
 
 To "activate" this, you will need to include this library and it's dependencies, and add the following code when you initialize Couchbase-Lite:
@@ -7,4 +6,4 @@ To "activate" this, you will need to include this library and it's dependencies,
 CBLView.setCompiler(new CBLJavaScriptViewCompiler());
 ```
 
-See [LiteServAndroid](https://github.com/couchbaselabs/LiteServAndroid) for an example where this is used.
+See [couchbase-lite-android-liteserv](https://github.com/couchbaselabs/couchbase-lite-android-liteserv) for an example where this is used.
