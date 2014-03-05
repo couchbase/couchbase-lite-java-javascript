@@ -16,9 +16,25 @@ repositories {
     mavenCentral()
 }
 
-// apply from: 'dependencies-archive.gradle'    // <- enable this when building an .aar
-apply from: 'dependencies-test.gradle'       // <- enable this when testing
+def buildJavascriptWithArtifacts = System.getProperty("buildJavascriptWithArtifacts")
 
+dependencies {
+
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+
+    // as discovered by trial and error, the build will fail if "compile" is
+    // used: Error: duplicate files during packaging of APK.  I guess it is
+    // being implicitly included by being in the libs folder, and then "double included"
+    // because of a "compile" directive to explicitly include the jar.
+    testCompile fileTree(dir: 'libs', include: 'td_collator_so.jar')
+
+    compile 'org.mozilla:rhino:1.7R3'
+
+    compile buildJavascriptWithArtifacts == null ?
+            project(':libraries:couchbase-lite-java-core') :
+            'com.couchbase.lite:java-core:' + System.getenv("UPLOAD_VERSION_CBLITE")
+
+}
 
 task createMavenDirectory(type: Exec) {
 
