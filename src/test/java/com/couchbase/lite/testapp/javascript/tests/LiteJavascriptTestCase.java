@@ -2,6 +2,7 @@ package com.couchbase.lite.testapp.javascript.tests;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
+import com.couchbase.lite.JavaContext;
 import com.couchbase.lite.Manager;
 import com.couchbase.lite.internal.Body;
 import com.couchbase.lite.router.Router;
@@ -81,7 +82,7 @@ public abstract class LiteJavascriptTestCase extends TestCase {
         File serverPathFile = new File(serverPath);
         FileDirUtils.deleteRecursive(serverPathFile);
         serverPathFile.mkdir();
-        manager = new Manager(new File(getRootDirectory(), "test"), Manager.DEFAULT_OPTIONS);
+        manager = new Manager(new JavaContext("test"), Manager.DEFAULT_OPTIONS);
     }
 
     protected void stopCBLite() {
