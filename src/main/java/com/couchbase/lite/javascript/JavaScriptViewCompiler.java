@@ -6,6 +6,7 @@ import org.elasticsearch.script.javascript.support.NativeMap;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeArray;
+import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.WrapFactory;
 
@@ -24,20 +25,21 @@ public class JavaScriptViewCompiler implements ViewCompiler {
 
 	@Override
 	public Mapper compileMap(String source, String language) {
-        if (language.equals("javascript")) {
+        if (language.equalsIgnoreCase("javascript")) {
             return new ViewMapBlockRhino(source);
         }
+
         throw new IllegalArgumentException(language + " is not supported");
 	}
 
 	@Override
 	public Reducer compileReduce(String source, String language) {
-        if (language.equals("javascript")) {
+        if (language.equalsIgnoreCase("javascript")) {
             return new ViewReduceBlockRhino(source);
         }
+
         throw new IllegalArgumentException(language + " is not supported");
 	}
-
 }
 
 /**
@@ -53,8 +55,7 @@ class CustomWrapFactory extends WrapFactory {
     public Scriptable wrapAsJavaObject(Context cx, Scriptable scope, Object javaObject, Class staticType) {
         if (javaObject instanceof Map) {
             return new NativeMap(scope, (Map) javaObject);
-        }
-        else if(javaObject instanceof List) {
+        } else if (javaObject instanceof List) {
             return new NativeList(scope, (List<Object>)javaObject);
         }
 
@@ -66,17 +67,41 @@ class CustomWrapFactory extends WrapFactory {
 
 class ViewMapBlockRhino implements Mapper {
 
-    private static WrapFactory wrapFactory = new CustomWrapFactory();
-    private Scriptable globalScope;
-    private String src;
+    private final String mapSrc;
+    private final Scriptable globalScope;
+    private final Script placeHolder;
+
+    private static final WrapFactory wrapFactory = new CustomWrapFactory();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public ViewMapBlockRhino(String src) {
-        this.src = src;
-        Context ctx = Context.enter();
+        mapSrc = src;
+
+        final Context ctx = Context.enter();
+
         try {
+            // Android dex won't allow us to create our own classes
             ctx.setOptimizationLevel(-1);
             ctx.setWrapFactory(wrapFactory);
             globalScope = ctx.initStandardObjects(null, true);
+
+            // create a place to hold results
+            final String resultArray = "var map_results = [];";
+            placeHolder = ctx.compileString(resultArray, "placeHolder", 1, null);
+
+            try {
+                //register the emit function
+                final String emitFunction = "var emit = function(key, value) { map_results.push([key, value]); };";
+                ctx.evaluateString(globalScope, emitFunction, "emit", 1, null);
+
+                // register the map function
+                final String map = "var map = " + mapSrc + ";";
+                ctx.evaluateString(globalScope, map, "map", 1, null);
+            } catch(org.mozilla.javascript.EvaluatorException e) {
+                // Error in the JavaScript view - CouchDB swallows  the error and tries the next document
+                Log.e(Database.TAG, "Javascript syntax error in view:\n" + src, e);
+                return;
+            }
         } finally {
             Context.exit();
         }
@@ -89,86 +114,67 @@ class ViewMapBlockRhino implements Mapper {
             ctx.setOptimizationLevel(-1);
             ctx.setWrapFactory(wrapFactory);
 
-            //create a place to hold results
-            String placeHolder = "var map_results = [];";
-            ctx.evaluateString(globalScope, placeHolder, "placeHolder", 1, null);
-
-            //register the emit function
-            String emitFunction = "var emit = function(key, value) { map_results.push([key, value]); };";
-            ctx.evaluateString(globalScope, emitFunction, "emit", 1, null);
-
-            //register the map function
-            String mapSrc = "var map = " + src + ";";
-            try {
-            	ctx.evaluateString(globalScope, mapSrc, "map", 1, null);
-            } catch(org.mozilla.javascript.EvaluatorException e) {
-            	// Error in the JavaScript view - CouchDB swallows  the error and tries the next document
-            	// REFACT: would be nice to check this in the constructor so we don't have to reparse every time
-            	// should also be much faster if we can insert the map function into this objects globals
-                Log.e(Database.TAG, "Javascript syntax error in view:\n" + src, e);
-                return;
-            }
+            // empty out the array that may have been filled by a previous call of this method
+            ctx.executeScriptWithContinuations(placeHolder, globalScope);
             
             // Need to stringify the json tree, as the ContextWrapper is unable
             // to correctly convert nested json to their js representation.
             // More specifically, if a dictionary is included that contains an array as a value 
             // that array will not be wrapped correctly but you'll get the plain 
             // java.util.ArrayList instead - and then an error.
-            ObjectMapper mapper = new ObjectMapper();
-            String json = null;
             try {
-            	json = mapper.writeValueAsString(document);
-			} catch (IOException e) {
+                final String mapInvocation = "map(" + mapper.writeValueAsString(document) + ");";
+                ctx.evaluateString(globalScope, mapInvocation, "map invocation", 1, null);
+			} catch (org.mozilla.javascript.RhinoException e) {
+                // Error in the JavaScript view - CouchDB swallows  the error and tries the next document
+                Log.e(Database.TAG, "Error in javascript view:\n" + mapSrc + "\n with document:\n" + document, e);
+                return;
+            } catch (IOException e) {
 				// Can thrown different subclasses of IOException- but we really do not care,
 				// as this document was unserialized from JSON, so Jackson should be able to serialize it. 
 				Log.e(Database.TAG, "Error reserializing json from the db: " + document, e);
 				return;
 			}
-            
-            String mapInvocation = "map(" + json + ");";
-            try {
-            	ctx.evaluateString(globalScope, mapInvocation, "map invocation", 1, null);
-            }
-            catch (org.mozilla.javascript.RhinoException e) {
-            	// Error in the JavaScript view - CouchDB swallows  the error and tries the next document
-                Log.e(Database.TAG, "Error in javascript view:\n" + src + "\n with document:\n" + document, e);
-                return;
-            }
 
             //now pull values out of the place holder and emit them
-            NativeArray mapResults = (NativeArray)globalScope.get("map_results", globalScope);
-            for(int i=0; i<mapResults.getLength(); i++) {
-                NativeArray mapResultItem = (NativeArray)mapResults.get(i);
-                if(mapResultItem.getLength() == 2) {
+            final NativeArray mapResults = (NativeArray) globalScope.get("map_results", globalScope);
+
+            final int resultSize = (int) mapResults.getLength();
+
+            for (int i=0; i< resultSize; i++) {
+                final NativeArray mapResultItem = (NativeArray) mapResults.get(i);
+
+                if (mapResultItem != null && mapResultItem.getLength() == 2) {
                     Object key = mapResultItem.get(0);
                     Object value = mapResultItem.get(1);
                     emitter.emit(key, value);
                 } else {
                     Log.e(Database.TAG, "Expected 2 element array with key and value");
                 }
-
             }
         } finally {
             Context.exit();
         }
-
     }
-    
 }
 
 class ViewReduceBlockRhino implements Reducer {
 
-    private static WrapFactory wrapFactory = new CustomWrapFactory();
-    private Scriptable globalScope;
-    private String src;
+    private final Scriptable globalScope;
+
+    private static final WrapFactory wrapFactory = new CustomWrapFactory();
 
     public ViewReduceBlockRhino(String src) {
-        this.src = src;
         Context ctx = Context.enter();
         try {
             ctx.setOptimizationLevel(-1);
             ctx.setWrapFactory(wrapFactory);
+
             globalScope = ctx.initStandardObjects(null, true);
+
+            // register the reduce function
+            final String reduceSrc = "var reduce = " + src + ";";
+            ctx.evaluateString(globalScope, reduceSrc, "reduce", 1, null);
         } finally {
             Context.exit();
         }
@@ -181,21 +187,13 @@ class ViewReduceBlockRhino implements Reducer {
             ctx.setOptimizationLevel(-1);
             ctx.setWrapFactory(wrapFactory);
 
-            //register the reduce function
-            String reduceSrc = "var reduce = " + src + ";";
-            ctx.evaluateString(globalScope, reduceSrc, "reduce", 1, null);
-
-            //find the reduce function and execute it
-            Function reduceFun = (Function)globalScope.get("reduce", globalScope);
+            // find the reduce function and execute it
+            Function reduceFun = (Function) globalScope.get("reduce", globalScope);
             Object[] functionArgs = { keys, values, rereduce };
-            Object result = reduceFun.call(ctx, globalScope, globalScope, functionArgs);
 
-            return result;
-
+            return reduceFun.call(ctx, globalScope, globalScope, functionArgs);
         } finally {
             Context.exit();
         }
-
     }
-    
 }
