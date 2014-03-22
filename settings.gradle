@@ -1,1 +1,0 @@
-include ':couchbase-lite-java-javascript', ':libraries:couchbase-lite-java-core'
