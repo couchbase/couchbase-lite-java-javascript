@@ -1,6 +1,12 @@
 package com.couchbase.lite.javascript;
 
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.PropertyNamingStrategy;
+import org.codehaus.jackson.map.SerializationConfig;
+import org.codehaus.jackson.map.introspect.VisibilityChecker;
 import org.elasticsearch.script.javascript.support.NativeList;
 import org.elasticsearch.script.javascript.support.NativeMap;
 import org.mozilla.javascript.Context;
@@ -77,6 +83,8 @@ class ViewMapBlockRhino implements Mapper {
     public ViewMapBlockRhino(String src) {
         mapSrc = src;
 
+        mapper.getJsonFactory().enable(JsonGenerator.Feature.ESCAPE_NON_ASCII);
+
         final Context ctx = Context.enter();
 
         try {
@@ -123,7 +131,17 @@ class ViewMapBlockRhino implements Mapper {
             // that array will not be wrapped correctly but you'll get the plain 
             // java.util.ArrayList instead - and then an error.
             try {
-                final String mapInvocation = "map(" + mapper.writeValueAsString(document) + ");";
+
+//                mapper.getSerializationConfig().with(SerializationConfig.Feature)
+                // One thing that CouchDB does is replace these whitespace/newlines values with null-bytes
+                final String json = mapper.writeValueAsString(document).replace("\\u2028", "\0");
+
+//                while ((t = json.indexOf('\u2028')) > 0) {
+//                    json = json.substring(0, t-1) + "\\n" + json.substring(t+1, json.length());
+//                }
+
+                final String mapInvocation = "map(" + json + ");";
+
                 ctx.evaluateString(globalScope, mapInvocation, "map invocation", 1, null);
 			} catch (org.mozilla.javascript.RhinoException e) {
                 // Error in the JavaScript view - CouchDB swallows  the error and tries the next document
