@@ -6,6 +6,7 @@ apply plugin: 'eclipse'
 repositories {
     maven { url 'http://files.couchbase.com/maven2/' }
     mavenCentral()
+    mavenLocal()
 }
 
 def buildJavascriptWithArtifacts = System.getProperty("buildJavascriptWithArtifacts")
