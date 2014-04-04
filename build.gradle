@@ -5,8 +5,7 @@ apply plugin: 'eclipse'
 
 repositories {
     mavenCentral()
-    maven { url couchbaseMavenRepo }
-    maven { url localMavenRepo     }
+    mavenLocal()
 }
 
 def buildJavascriptWithArtifacts = System.getProperty("buildJavascriptWithArtifacts")
