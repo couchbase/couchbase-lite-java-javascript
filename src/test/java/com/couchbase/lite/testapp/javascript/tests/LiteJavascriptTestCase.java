@@ -282,7 +282,7 @@ public abstract class LiteJavascriptTestCase extends TestCase {
     protected Object sendBody(String method, String path, Object bodyObj, int expectedStatus, Object expectedResult) {
         URLConnection conn = sendRequest(method, path, null, bodyObj);
         Object result = parseJSONResponse(conn);
-        Log.v(TAG, String.format("%s %s --> %d", method, path, conn.getResponseCode()));
+        Log.v(TAG, "%s %s --> %d", method, path, conn.getResponseCode());
         Assert.assertEquals(expectedStatus, conn.getResponseCode());
         if(expectedResult != null) {
             Assert.assertEquals(expectedResult, result);
