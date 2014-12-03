@@ -144,7 +144,7 @@ class ViewMapBlockRhino implements Mapper {
                     Object value = mapResultItem.get(1);
                     emitter.emit(key, value);
                 } else {
-                    Log.e(Database.TAG, "Expected 2 element array with key and value.  Got: %s", mapResultItem);
+                    Log.e(Database.TAG, String.format("Expected 2 element array with key and value.  Got: %s", mapResultItem));
                 }
 
             }
