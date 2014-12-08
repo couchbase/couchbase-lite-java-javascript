@@ -6,6 +6,6 @@
 
 #at first build all projects
 ./gradlew :libraries:couchbase-lite-java-core:build && ./gradlew assemble
-#&& ./gradlew :build -DbuildAndroidWithArtifacts &&
+#&& ./gradlew :build -DbuildJavascriptWithArtifacts &&
 #then upload artifacts
-./gradlew :uploadArchivesWrapper -DbuildAndroidWithArtifacts
+./gradlew :uploadArchivesWrapper -DbuildJavascriptWithArtifacts
