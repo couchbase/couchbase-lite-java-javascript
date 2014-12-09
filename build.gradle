@@ -51,7 +51,7 @@ uploadArchives {
             repository(url: System.getenv("MAVEN_UPLOAD_REPO_URL")) {
                 authentication(userName: System.getenv("MAVEN_UPLOAD_USERNAME"), password: System.getenv("MAVEN_UPLOAD_PASSWORD"))
             }
-            pom.version = System.getenv("MAVEN_UPLOAD_VERSION")  // eg, 0.7.2
+            pom.version = System.getenv("MAVEN_UPLOAD_VERSION") != null ? System.getenv("MAVEN_UPLOAD_VERSION") : ''
             pom.groupId = 'com.couchbase.lite'
             pom.artifactId = 'couchbase-lite-java-javascript'
             pom.project {
