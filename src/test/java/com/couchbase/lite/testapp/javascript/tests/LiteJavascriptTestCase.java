@@ -1,13 +1,15 @@
 package com.couchbase.lite.testapp.javascript.tests;
 
+import com.couchbase.lite.Context;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
-import com.couchbase.lite.JavaContext;
 import com.couchbase.lite.Manager;
+import com.couchbase.lite.NetworkReachabilityManager;
 import com.couchbase.lite.internal.Body;
 import com.couchbase.lite.router.Router;
 import com.couchbase.lite.router.URLConnection;
 import com.couchbase.lite.router.URLStreamHandlerFactory;
+import com.couchbase.lite.storage.SQLiteStorageEngineFactory;
 import com.couchbase.lite.support.FileDirUtils;
 import com.couchbase.lite.util.Log;
 
@@ -82,8 +84,34 @@ public abstract class LiteJavascriptTestCase extends TestCase {
         File serverPathFile = new File(serverPath);
         FileDirUtils.deleteRecursive(serverPathFile);
         serverPathFile.mkdir();
-        manager = new Manager(new JavaContext("test"), Manager.DEFAULT_OPTIONS);
+        manager = new Manager(getTestContext(), Manager.DEFAULT_OPTIONS);
     }
+
+    private Context getTestContext() {
+        return new Context() {
+            @Override
+            public File getFilesDir() {
+                return getRootDirectory();
+            }
+
+            @Override
+            public void setNetworkReachabilityManager(NetworkReachabilityManager networkReachabilityManager) {
+
+            }
+
+            @Override
+            public NetworkReachabilityManager getNetworkReachabilityManager() {
+                return null;
+            }
+
+            @Override
+            public SQLiteStorageEngineFactory getSQLiteStorageEngineFactory() {
+                return null;
+            }
+        };
+    }
+
+
 
     protected void stopCBLite() {
         if(manager != null) {
