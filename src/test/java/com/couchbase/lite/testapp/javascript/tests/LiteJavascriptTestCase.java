@@ -12,12 +12,11 @@ import com.couchbase.lite.router.URLStreamHandlerFactory;
 import com.couchbase.lite.storage.SQLiteStorageEngineFactory;
 import com.couchbase.lite.support.FileDirUtils;
 import com.couchbase.lite.util.Log;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

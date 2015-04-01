@@ -1,6 +1,13 @@
 package com.couchbase.lite.javascript;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.couchbase.lite.Database;
+import com.couchbase.lite.Emitter;
+import com.couchbase.lite.Mapper;
+import com.couchbase.lite.Reducer;
+import com.couchbase.lite.ViewCompiler;
+import com.couchbase.lite.util.Log;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.elasticsearch.script.javascript.support.NativeList;
 import org.elasticsearch.script.javascript.support.NativeMap;
 import org.mozilla.javascript.Context;
@@ -12,13 +19,6 @@ import org.mozilla.javascript.WrapFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
-import com.couchbase.lite.Database;
-import com.couchbase.lite.Emitter;
-import com.couchbase.lite.Mapper;
-import com.couchbase.lite.Reducer;
-import com.couchbase.lite.ViewCompiler;
-import com.couchbase.lite.util.Log;
 
 public class JavaScriptViewCompiler implements ViewCompiler {
 
