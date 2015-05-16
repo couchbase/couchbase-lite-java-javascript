@@ -105,6 +105,20 @@ public class JavaScriptTestCase extends TestCase {
     }
 
 
+    public void testReduceKeysAndValuesAreArrays() {
+
+        List<Object> keys = new ArrayList<Object>(0);
+        List<Object> values = new ArrayList<Object>(0);
+
+
+        Reducer reduce = viewCompiler.compileReduce("function(keys, values, rereduce){ return (Array.isArray(keys) && Array.isArray(values)) }", "javascript");
+
+        Object result = reduce.reduce(keys, values, false);
+        assertEquals(true, result);
+
+    }
+
+
     public void testReduceNativeCount() {
 
         List<Object> keys = new ArrayList<Object>(5);
