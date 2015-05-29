@@ -1,4 +1,4 @@
-package com.couchbase.lite.testapp.javascript.tests.helper;
+package com.couchbase.lite.javascript.helper;
 
 import com.couchbase.lite.Emitter;
 
@@ -21,6 +21,4 @@ public class MockEmiter implements Emitter {
     public EmitPair get(int i) {
         return emited.get(i);
     }
-
-
 }

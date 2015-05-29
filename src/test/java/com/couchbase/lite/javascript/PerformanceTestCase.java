@@ -1,9 +1,8 @@
-package com.couchbase.lite.testapp.javascript.tests;
+package com.couchbase.lite.javascript;
 
 import com.couchbase.lite.Emitter;
-import com.couchbase.lite.javascript.JavaScriptViewCompiler;
 import com.couchbase.lite.Mapper;
-import com.couchbase.lite.testapp.javascript.tests.helper.MockEmiter;
+import com.couchbase.lite.javascript.helper.MockEmiter;
 
 import junit.framework.TestCase;
 
@@ -39,7 +38,7 @@ public class PerformanceTestCase extends TestCase {
         for (int i = 0; i < 20000; i++) {
             jsMap.map(doc, jsEmiter);
         }
-        assertEquals(20000,jsEmiter.count());
+        assertEquals(20000, jsEmiter.count());
     }
 
     public void test200SimpleNativeView() {

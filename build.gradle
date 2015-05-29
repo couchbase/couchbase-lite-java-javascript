@@ -16,7 +16,6 @@ def buildJavascriptWithArtifacts = System.getProperty("buildJavascriptWithArtifa
 dependencies {
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
-    testCompile group: 'com.google.code.gson', name: 'gson', version: '2.3.1'
 
     // as discovered by trial and error, the build will fail if "compile" is
     // used: Error: duplicate files during packaging of APK.  I guess it is

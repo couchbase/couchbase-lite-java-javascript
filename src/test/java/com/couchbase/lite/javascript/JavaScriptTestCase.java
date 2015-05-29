@@ -1,10 +1,9 @@
-package com.couchbase.lite.testapp.javascript.tests;
+package com.couchbase.lite.javascript;
 
 import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Reducer;
-import com.couchbase.lite.javascript.JavaScriptViewCompiler;
-import com.couchbase.lite.testapp.javascript.tests.helper.EmitPair;
-import com.couchbase.lite.testapp.javascript.tests.helper.MockEmiter;
+import com.couchbase.lite.javascript.helper.EmitPair;
+import com.couchbase.lite.javascript.helper.MockEmiter;
 
 import junit.framework.TestCase;
 
