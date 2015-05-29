@@ -4,7 +4,6 @@ import com.couchbase.lite.Emitter;
 
 import org.mozilla.javascript.ScriptableObject;
 
-
 public class MapGlobalScope extends GlobalScope {
     private Emitter emitter;
 
@@ -14,11 +13,9 @@ public class MapGlobalScope extends GlobalScope {
         this.defineFunctionProperties(names, MapGlobalScope.class, ScriptableObject.DONTENUM);
     }
 
-
     public void setEmitter(Emitter emitter) {
         this.emitter = emitter;
     }
-
 
     // emit might fail when called in a method of a JS Object
     // I don't think that is an issue - who will create a Object in a view?
@@ -28,5 +25,4 @@ public class MapGlobalScope extends GlobalScope {
     public void emit(Object key, Object value) {
         emitter.emit(key, value);
     }
-
 }

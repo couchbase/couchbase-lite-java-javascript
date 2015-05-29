@@ -10,7 +10,6 @@ import org.mozilla.javascript.WrapFactory;
 import java.util.List;
 import java.util.Map;
 
-
 public class CustomWrapFactory extends WrapFactory {
 
     public CustomWrapFactory() {

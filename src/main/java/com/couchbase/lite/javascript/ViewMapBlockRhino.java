@@ -11,7 +11,6 @@ import org.mozilla.javascript.WrapFactory;
 
 import java.util.Map;
 
-
 class ViewMapBlockRhino implements Mapper {
 
     private static WrapFactory wrapFactory = new CustomWrapFactory();
@@ -20,7 +19,6 @@ class ViewMapBlockRhino implements Mapper {
     private Function mapFunction;
 
     public ViewMapBlockRhino(String src) {
-
 
         org.mozilla.javascript.Context ctx = org.mozilla.javascript.Context.enter();
 
@@ -49,9 +47,7 @@ class ViewMapBlockRhino implements Mapper {
             localScope.setPrototype(globalScope);
             localScope.setParentScope(null);
 
-
             Object jsDocument = org.mozilla.javascript.Context.javaToJS(document, localScope);
-
 
             try {
                 mapFunction.call(ctx, localScope, null, new Object[]{jsDocument});
@@ -62,7 +58,5 @@ class ViewMapBlockRhino implements Mapper {
         } finally {
             org.mozilla.javascript.Context.exit();
         }
-
     }
-
 }

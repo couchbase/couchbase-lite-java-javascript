@@ -4,7 +4,6 @@ import com.couchbase.lite.util.Log;
 
 import org.mozilla.javascript.ScriptableObject;
 
-
 class GlobalScope extends ScriptableObject {
     public GlobalScope() {
         super();

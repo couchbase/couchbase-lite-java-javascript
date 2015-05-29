@@ -1,6 +1,5 @@
 package com.couchbase.lite.javascript;
 
-
 import com.couchbase.lite.Reducer;
 import com.couchbase.lite.javascript.scopes.ReduceGlobalScope;
 import com.couchbase.lite.javascript.wrapper.CustomWrapFactory;
@@ -12,7 +11,6 @@ import org.mozilla.javascript.WrapFactory;
 
 import java.util.List;
 
-
 class ViewReduceBlockRhino implements Reducer {
 
     private static WrapFactory wrapFactory = new CustomWrapFactory();
@@ -22,7 +20,6 @@ class ViewReduceBlockRhino implements Reducer {
     private final NativReduceFunctions nativeReduce;
 
     public ViewReduceBlockRhino(String src) {
-
 
         nativeReduce = NativReduceFunctions.fromKey(src);
 
@@ -45,7 +42,6 @@ class ViewReduceBlockRhino implements Reducer {
             reduceFunction = null;
         }
     }
-
 
     @Override
     public Object reduce(List<Object> keys, List<Object> values, boolean reReduce) {

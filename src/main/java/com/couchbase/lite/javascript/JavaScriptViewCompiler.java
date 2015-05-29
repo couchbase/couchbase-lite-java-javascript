@@ -1,10 +1,8 @@
 package com.couchbase.lite.javascript;
 
-
 import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Reducer;
 import com.couchbase.lite.ViewCompiler;
-
 
 public class JavaScriptViewCompiler implements ViewCompiler {
     @Override

@@ -30,7 +30,6 @@ public class JavaScriptTestCase extends TestCase {
     }
 
     public void testSimpleJavaScriptView() {
-
         Map doc = new HashMap();
         doc.put("_id", "foo");
 
@@ -40,11 +39,9 @@ public class JavaScriptTestCase extends TestCase {
 
         assertEquals(1, emiter.count());
         assertEquals(new EmitPair("foo", null), emiter.get(0));
-
     }
 
     public void testReduceSum() {
-
         List<Object> keys = new ArrayList<Object>(5);
         List<Object> values = new ArrayList<Object>(5);
 
@@ -58,13 +55,10 @@ public class JavaScriptTestCase extends TestCase {
 
         Object result = reduce.reduce(keys, values, false);
 
-
         assertEquals(new Double(15), result);
     }
 
-
     public void testReduceNativeSum() {
-
         List<Object> keys = new ArrayList<Object>(5);
         List<Object> values = new ArrayList<Object>(5);
 
@@ -78,12 +72,10 @@ public class JavaScriptTestCase extends TestCase {
 
         Object result = reduce.reduce(keys, values, false);
 
-
         assertEquals(new Double(15), result);
     }
 
     public void testReduceCount() {
-
         List<Object> keys = new ArrayList<Object>(5);
         List<Object> values = new ArrayList<Object>(5);
 
@@ -101,26 +93,20 @@ public class JavaScriptTestCase extends TestCase {
         // re-reduce
         result = reduce.reduce(keys, values, true);
         assertEquals(new Double(15), result);
-
     }
-
 
     public void testReduceKeysAndValuesAreArrays() {
 
         List<Object> keys = new ArrayList<Object>(0);
         List<Object> values = new ArrayList<Object>(0);
 
-
         Reducer reduce = viewCompiler.compileReduce("function(keys, values, rereduce){ return (Array.isArray(keys) && Array.isArray(values)) }", "javascript");
 
         Object result = reduce.reduce(keys, values, false);
         assertEquals(true, result);
-
     }
 
-
     public void testReduceNativeCount() {
-
         List<Object> keys = new ArrayList<Object>(5);
         List<Object> values = new ArrayList<Object>(5);
 
@@ -138,7 +124,6 @@ public class JavaScriptTestCase extends TestCase {
         // re-reduce
         result = reduce.reduce(keys, values, true);
         assertEquals(new Double(15), result);
-
     }
 
     public void testScopeSeparation() {

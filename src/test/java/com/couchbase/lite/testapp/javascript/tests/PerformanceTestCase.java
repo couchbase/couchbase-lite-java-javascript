@@ -21,7 +21,6 @@ public class PerformanceTestCase extends TestCase {
 
     private JavaScriptViewCompiler viewCompiler;
 
-
     @Override
     public void setUp() throws Exception {
         super.setUp();
@@ -30,7 +29,6 @@ public class PerformanceTestCase extends TestCase {
     }
 
     public void test200SimpleJavaScriptView() {
-
         MockEmmiter jsEmiter = new MockEmmiter();
 
         Map doc = new HashMap();
@@ -42,11 +40,9 @@ public class PerformanceTestCase extends TestCase {
             jsMap.map(doc, jsEmiter);
         }
         assertEquals(20000,jsEmiter.count());
-
-
     }
-    public void test200SimpleNativeView() {
 
+    public void test200SimpleNativeView() {
         MockEmmiter nativeEmiter = new MockEmmiter();
 
         Map doc = new HashMap();
@@ -63,9 +59,5 @@ public class PerformanceTestCase extends TestCase {
             nativeMap.map(doc, nativeEmiter);
         }
         assertEquals(20000, nativeEmiter.count());
-
-
     }
-
-
 }
