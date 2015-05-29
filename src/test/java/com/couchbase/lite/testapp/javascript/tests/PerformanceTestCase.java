@@ -3,7 +3,7 @@ package com.couchbase.lite.testapp.javascript.tests;
 import com.couchbase.lite.Emitter;
 import com.couchbase.lite.javascript.JavaScriptViewCompiler;
 import com.couchbase.lite.Mapper;
-import com.couchbase.lite.testapp.javascript.tests.helper.MockEmmiter;
+import com.couchbase.lite.testapp.javascript.tests.helper.MockEmiter;
 
 import junit.framework.TestCase;
 
@@ -29,7 +29,7 @@ public class PerformanceTestCase extends TestCase {
     }
 
     public void test200SimpleJavaScriptView() {
-        MockEmmiter jsEmiter = new MockEmmiter();
+        MockEmiter jsEmiter = new MockEmiter();
 
         Map doc = new HashMap();
         doc.put("_id", "foo");
@@ -43,7 +43,7 @@ public class PerformanceTestCase extends TestCase {
     }
 
     public void test200SimpleNativeView() {
-        MockEmmiter nativeEmiter = new MockEmmiter();
+        MockEmiter nativeEmiter = new MockEmiter();
 
         Map doc = new HashMap();
         doc.put("_id", "foo");

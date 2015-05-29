@@ -30,7 +30,6 @@ public class EmitPair {
         System.out.print(jsonValue +" = "+ thatJsonValue);
         if(jsonKey.equals(thatJsonKey) && jsonValue.equals(thatJsonValue)) return true;
 
-
         return false;
     }
 

@@ -5,7 +5,7 @@ import com.couchbase.lite.Emitter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MockEmmiter implements Emitter {
+public class MockEmiter implements Emitter {
 
     private List<EmitPair> emited = new ArrayList<EmitPair>();
 
