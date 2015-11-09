@@ -11,12 +11,14 @@
  * either express or implied. See the License for the specific language governing permissions
  * and limitations under the License.
  */
+
 package com.couchbase.lite.javascript;
 
-import com.couchbase.lite.Emitter;
-import com.couchbase.lite.Mapper;
-import com.couchbase.lite.javascript.scopes.MapGlobalScope;
+import com.couchbase.lite.ReplicationFilter;
+import com.couchbase.lite.SavedRevision;
+import com.couchbase.lite.javascript.scopes.GlobalScope;
 import com.couchbase.lite.javascript.wrapper.CustomWrapFactory;
+import com.couchbase.lite.util.Log;
 
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
@@ -24,49 +26,51 @@ import org.mozilla.javascript.WrapFactory;
 
 import java.util.Map;
 
-class ViewMapBlockRhino implements Mapper {
+/**
+ * Created by hideki on 10/28/15.
+ */
+public class ReplicationFilterBlockRhino implements ReplicationFilter {
+    public static String TAG = "ReplicationFilterBlockRhino";
 
     private static WrapFactory wrapFactory = new CustomWrapFactory();
-    private Scriptable globalScope;
-    private MapGlobalScope mapGlobalScope;
-    private Function mapFunction;
+    private Scriptable scope;
+    private GlobalScope globalScope;
+    private Function filterFunction;
 
-    public ViewMapBlockRhino(String src) {
-
+    public ReplicationFilterBlockRhino(String src){
         org.mozilla.javascript.Context ctx = org.mozilla.javascript.Context.enter();
-
         try {
             ctx.setOptimizationLevel(-1);
             ctx.setWrapFactory(wrapFactory);
-            mapGlobalScope = new MapGlobalScope();
-            globalScope = ctx.initStandardObjects(mapGlobalScope, true);
-            mapFunction = ctx.compileFunction(globalScope, src, "map", 0, null);
+            globalScope = new GlobalScope();
+            scope = ctx.initStandardObjects(globalScope, true);
+            filterFunction = ctx.compileFunction(scope, src, "filter", 0, null);
         } finally {
             org.mozilla.javascript.Context.exit();
         }
     }
 
     @Override
-    public void map(Map<String, Object> document, Emitter emitter) {
-
-        mapGlobalScope.setEmitter(emitter);
-
+    public boolean filter(SavedRevision revision, Map<String, Object> params) {
         org.mozilla.javascript.Context ctx = org.mozilla.javascript.Context.enter();
         try {
             ctx.setOptimizationLevel(-1);
             ctx.setWrapFactory(wrapFactory);
 
-            Scriptable localScope = ctx.newObject(globalScope);
-            localScope.setPrototype(globalScope);
+            Scriptable localScope = ctx.newObject(scope);
+            localScope.setPrototype(scope);
             localScope.setParentScope(null);
 
-            Object jsDocument = org.mozilla.javascript.Context.javaToJS(document, localScope);
+            Object jsDocument = org.mozilla.javascript.Context.javaToJS(revision.getProperties(), localScope);
+            Object jsParams = org.mozilla.javascript.Context.javaToJS(params, localScope);
 
             try {
-                mapFunction.call(ctx, localScope, null, new Object[]{jsDocument});
+                Object result = filterFunction.call(ctx, localScope, null, new Object[]{jsDocument, jsParams});
+                return ((Boolean)result).booleanValue();
             } catch (org.mozilla.javascript.RhinoException e) {
                 // Error in the JavaScript view - CouchDB swallows  the error and tries the next document
-                return;
+                Log.e(TAG, "Error in filterFunction.call()", e);
+                return false;
             }
         } finally {
             org.mozilla.javascript.Context.exit();

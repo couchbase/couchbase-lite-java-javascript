@@ -11,27 +11,21 @@
  * either express or implied. See the License for the specific language governing permissions
  * and limitations under the License.
  */
-package com.couchbase.lite.javascript.scopes;
 
-import com.couchbase.lite.util.Log;
+package com.couchbase.lite.javascript;
 
-import org.mozilla.javascript.ScriptableObject;
+import com.couchbase.lite.ReplicationFilter;
+import com.couchbase.lite.ReplicationFilterCompiler;
 
-public class GlobalScope extends ScriptableObject {
-    public GlobalScope() {
-        super();
-        String[] names = {"log"};
-        this.defineFunctionProperties(names, GlobalScope.class, ScriptableObject.DONTENUM);
-    }
-
-    public static void log(Object msg) {
-        // right tag?
-        // TODO maybe more sophisticated string conversion
-        Log.d(Log.TAG_VIEW, msg.toString());
-    }
-
+/**
+ * Created by hideki on 10/28/15.
+ */
+public class JavaScriptReplicationFilterCompiler implements ReplicationFilterCompiler {
     @Override
-    public String getClassName() {
-        return "global";
+    public ReplicationFilter compileFilterFunction(String source, String language) {
+        if (language != null && language.equalsIgnoreCase("javascript")) {
+            return new ReplicationFilterBlockRhino(source);
+        }
+        throw new IllegalArgumentException(language + " is not supported");
     }
 }
