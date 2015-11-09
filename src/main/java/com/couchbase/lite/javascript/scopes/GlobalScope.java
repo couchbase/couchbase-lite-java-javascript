@@ -4,7 +4,7 @@ import com.couchbase.lite.util.Log;
 
 import org.mozilla.javascript.ScriptableObject;
 
-class GlobalScope extends ScriptableObject {
+public class GlobalScope extends ScriptableObject {
     public GlobalScope() {
         super();
         String[] names = {"log"};
