@@ -73,30 +73,30 @@ class ViewReduceBlockRhino implements Reducer {
                 return nativeCount(keys, values, reReduce);
             case DEFAULT:
             default:
-                synchronized (lockFunction) {
-                    org.mozilla.javascript.Context ctx = org.mozilla.javascript.Context.enter();
+                org.mozilla.javascript.Context ctx = org.mozilla.javascript.Context.enter();
+                try {
+                    ctx.setOptimizationLevel(-1);
+                    ctx.setWrapFactory(wrapFactory);
+
+                    Scriptable localScope = ctx.newObject(globalScope);
+                    localScope.setPrototype(globalScope);
+                    localScope.setParentScope(null);
+
+                    Object[] args = new Object[3];
+                    args[0] = org.mozilla.javascript.Context.javaToJS(keys, localScope);
+                    args[1] = org.mozilla.javascript.Context.javaToJS(values, localScope);
+                    args[2] = org.mozilla.javascript.Context.javaToJS(reReduce, localScope);
+
                     try {
-                        ctx.setOptimizationLevel(-1);
-                        ctx.setWrapFactory(wrapFactory);
-
-                        Scriptable localScope = ctx.newObject(globalScope);
-                        localScope.setPrototype(globalScope);
-                        localScope.setParentScope(null);
-
-                        Object[] args = new Object[3];
-                        args[0] = org.mozilla.javascript.Context.javaToJS(keys, localScope);
-                        args[1] = org.mozilla.javascript.Context.javaToJS(values, localScope);
-                        args[2] = org.mozilla.javascript.Context.javaToJS(reReduce, localScope);
-
-                        try {
+                        synchronized (lockFunction) {
                             return reduceFunction.call(ctx, localScope, null, args);
-                        } catch (org.mozilla.javascript.RhinoException e) {
-                            Log.e(TAG, "Error in calling JavaScript reduce function", e);
-                            return null;
                         }
-                    } finally {
-                        org.mozilla.javascript.Context.exit();
+                    } catch (org.mozilla.javascript.RhinoException e) {
+                        Log.e(TAG, "Error in calling JavaScript reduce function", e);
+                        return null;
                     }
+                } finally {
+                    org.mozilla.javascript.Context.exit();
                 }
         }
     }

@@ -55,29 +55,29 @@ class ViewMapBlockRhino implements Mapper {
 
     @Override
     public void map(Map<String, Object> document, Emitter emitter) {
-        synchronized (lockFunction) {
-            mapGlobalScope.setEmitter(emitter);
+        mapGlobalScope.setEmitter(emitter);
 
-            org.mozilla.javascript.Context ctx = org.mozilla.javascript.Context.enter();
+        org.mozilla.javascript.Context ctx = org.mozilla.javascript.Context.enter();
+        try {
+            ctx.setOptimizationLevel(-1);
+            ctx.setWrapFactory(wrapFactory);
+
+            Scriptable localScope = ctx.newObject(globalScope);
+            localScope.setPrototype(globalScope);
+            localScope.setParentScope(null);
+
+            Object jsDocument = org.mozilla.javascript.Context.javaToJS(document, localScope);
+
             try {
-                ctx.setOptimizationLevel(-1);
-                ctx.setWrapFactory(wrapFactory);
-
-                Scriptable localScope = ctx.newObject(globalScope);
-                localScope.setPrototype(globalScope);
-                localScope.setParentScope(null);
-
-                Object jsDocument = org.mozilla.javascript.Context.javaToJS(document, localScope);
-
-                try {
+                synchronized (lockFunction) {
                     mapFunction.call(ctx, localScope, null, new Object[]{jsDocument});
-                } catch (org.mozilla.javascript.RhinoException e) {
-                    Log.e(TAG, "Error in calling JavaScript map function", e);
-                    return;
                 }
-            } finally {
-                org.mozilla.javascript.Context.exit();
+            } catch (org.mozilla.javascript.RhinoException e) {
+                Log.e(TAG, "Error in calling JavaScript map function", e);
+                return;
             }
+        } finally {
+            org.mozilla.javascript.Context.exit();
         }
     }
 }

@@ -58,27 +58,27 @@ public class ReplicationFilterBlockRhino implements ReplicationFilter {
 
     @Override
     public boolean filter(SavedRevision revision, Map<String, Object> params) {
-        synchronized (lockFunction) {
-            org.mozilla.javascript.Context ctx = org.mozilla.javascript.Context.enter();
-            try {
-                ctx.setOptimizationLevel(-1);
-                ctx.setWrapFactory(wrapFactory);
-                Scriptable localScope = ctx.newObject(scope);
-                localScope.setPrototype(scope);
-                localScope.setParentScope(null);
-                Object jsDocument = org.mozilla.javascript.Context.javaToJS(revision.getProperties(), localScope);
-                Object jsParams = org.mozilla.javascript.Context.javaToJS(params, localScope);
+        org.mozilla.javascript.Context ctx = org.mozilla.javascript.Context.enter();
+        try {
+            ctx.setOptimizationLevel(-1);
+            ctx.setWrapFactory(wrapFactory);
+            Scriptable localScope = ctx.newObject(scope);
+            localScope.setPrototype(scope);
+            localScope.setParentScope(null);
+            Object jsDocument = org.mozilla.javascript.Context.javaToJS(revision.getProperties(), localScope);
+            Object jsParams = org.mozilla.javascript.Context.javaToJS(params, localScope);
 
-                try {
+            try {
+                synchronized (lockFunction) {
                     Object result = filterFunction.call(ctx, localScope, null, new Object[]{jsDocument, jsParams});
                     return ((Boolean) result).booleanValue();
-                } catch (org.mozilla.javascript.RhinoException e) {
-                    Log.e(TAG, "Error in filterFunction.call()", e);
-                    return false;
                 }
-            } finally {
-                org.mozilla.javascript.Context.exit();
+            } catch (org.mozilla.javascript.RhinoException e) {
+                Log.e(TAG, "Error in filterFunction.call()", e);
+                return false;
             }
+        } finally {
+            org.mozilla.javascript.Context.exit();
         }
     }
 }
