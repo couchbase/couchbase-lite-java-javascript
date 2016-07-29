@@ -1,21 +1,22 @@
-/**
- * Copyright (c) 2015 Couchbase, Inc All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the
- * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific language governing permissions
- * and limitations under the License.
- */
+//
+// Copyright (c) 2016 Couchbase, Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+// except in compliance with the License. You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software distributed under the
+// License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+// either express or implied. See the License for the specific language governing permissions
+// and limitations under the License.
+//
 package com.couchbase.lite.javascript;
 
 import com.couchbase.lite.Reducer;
 import com.couchbase.lite.javascript.scopes.ReduceGlobalScope;
 import com.couchbase.lite.javascript.wrapper.CustomWrapFactory;
+import com.couchbase.lite.util.Log;
 
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
@@ -25,6 +26,7 @@ import org.mozilla.javascript.WrapFactory;
 import java.util.List;
 
 class ViewReduceBlockRhino implements Reducer {
+    private final static String TAG = "JavaScriptEngine";
 
     private static WrapFactory wrapFactory = new CustomWrapFactory();
     private final ReduceGlobalScope reduceGlobalScope;
@@ -32,13 +34,19 @@ class ViewReduceBlockRhino implements Reducer {
     private final Function reduceFunction;
     private final NativReduceFunctions nativeReduce;
 
+    // NOTE: Scope is sharable with multiple threads, it seems `Function` is not.
+    //       Compiling javascript codes for every request makes slow.
+    //       It is reason current code base re-use compiled Function.
+    //       Instead of compiling for every request, use `synchronized` to protect Function
+    //       https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Rhino/Scopes_and_Contexts
+    private final Object lockFunction = new Object();
+
     public ViewReduceBlockRhino(String src) {
 
         nativeReduce = NativReduceFunctions.fromKey(src);
 
         if (nativeReduce == NativReduceFunctions.DEFAULT) {
             org.mozilla.javascript.Context ctx = org.mozilla.javascript.Context.enter();
-
             try {
                 ctx.setOptimizationLevel(-1);
                 ctx.setWrapFactory(wrapFactory);
@@ -58,7 +66,6 @@ class ViewReduceBlockRhino implements Reducer {
 
     @Override
     public Object reduce(List<Object> keys, List<Object> values, boolean reReduce) {
-
         switch (nativeReduce) {
             case SUM:
                 return nativeSum(keys, values, reReduce);
@@ -76,16 +83,18 @@ class ViewReduceBlockRhino implements Reducer {
                     localScope.setParentScope(null);
 
                     Object[] args = new Object[3];
-
                     args[0] = org.mozilla.javascript.Context.javaToJS(keys, localScope);
                     args[1] = org.mozilla.javascript.Context.javaToJS(values, localScope);
                     args[2] = org.mozilla.javascript.Context.javaToJS(reReduce, localScope);
 
-                    return reduceFunction.call(ctx, localScope, null, args);
-
-                } catch (org.mozilla.javascript.RhinoException e) {
-                    // TODO check couchdb behaviour on error in reduce function
-                    return null;
+                    try {
+                        synchronized (lockFunction) {
+                            return reduceFunction.call(ctx, localScope, null, args);
+                        }
+                    } catch (org.mozilla.javascript.RhinoException e) {
+                        Log.e(TAG, "Error in calling JavaScript reduce function", e);
+                        return null;
+                    }
                 } finally {
                     org.mozilla.javascript.Context.exit();
                 }
